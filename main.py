@@ -8,6 +8,11 @@ from data_processor import load_data, preprocess_for_synthesis
 from validator import run_evaluation_report
 from approaches.example import run_random_sample
 
+from approaches.gaussian_copula import run_gaussian_copula
+from approaches.ctgan_approach import run_ctgan
+from approaches.knn_perturbation import run_knn_perturbation
+from approaches.llm_archetype import run_llm_archetype
+
 
 load_dotenv()
 
@@ -32,8 +37,13 @@ def main():
 
     # Phase 2: Synthetic Data Generation
     print("\nGenerate synthetic data: ")
-    synthetic_df = run_random_sample(df_clean, num_samples=8000)
-
+    # Pick ONE approach to run (comment/uncomment as needed):
+    #synthetic_df = run_random_sample(df_clean, num_samples=8000)
+    #synthetic_df = run_gaussian_copula(df_clean, num_samples=8000)
+    #synthetic_df = run_ctgan(df_clean, num_samples=8000)            # best stats, needs: pip install sdv
+    synthetic_df = run_knn_perturbation(df_clean, num_samples=8000)  # fast, clinical-logic friendly
+    #synthetic_df = run_llm_archetype(df_clean, num_samples=8000)    # creative, needs ANTHROPIC_API_KEY
+    
     # Phase 3: Quality Assurance
     # Compares the cleaned source data against the generated output
     run_evaluation_report(raw_data, synthetic_df)

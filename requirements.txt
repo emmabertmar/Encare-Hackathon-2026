@@ -3,3 +3,5 @@ numpy
 scipy
 python-dotenv
 scikit-learn
+sdv
+anthropic
