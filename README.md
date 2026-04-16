@@ -36,7 +36,7 @@ Update your package manager: sudo apt update
 
 Install Python: sudo apt install python3 python3-venv python3-pip
 
-Verify: python3 --version
+Verify: python3 --version hello world
 
 ### 3. Create a Virtual Environment
 Open your terminal in the project folder and run:
