@@ -1,41 +1,61 @@
 from datetime import datetime
 import os
+import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
 
 from data_processor import load_data, preprocess_for_synthesis
 from validator import run_evaluation_report
-from approaches.jittering_model import generate_jittered_data
+from approaches.example import run_random_sample
+
+from approaches.gaussian_copula import run_gaussian_copula
+from approaches.ctgan_approach import run_ctgan
+from approaches.knn_perturbation import run_knn_perturbation
+from approaches.llm_archetype import run_llm_archetype
+
 
 load_dotenv()
 
 def main():
-    # Define directory paths
+    # Define directory paths using pathlib for cross-platform compatibility
     data_dir = Path("data")
     results_dir = Path("results")
 
     # File paths
     input_file = data_dir / "data.csv"
     
-    # Phase 1: Data loading
+    # Phase 1: Data loading and cleaning
     if not input_file.exists():
         print(f"Error: {input_file} not found. Please place the CSV in the 'data' folder.")
         return
 
     raw_data = load_data(str(input_file))
-    df_clean = preprocess_for_synthesis(raw_data)
+    
+    #Decomment if dataprocessing is used
+    #df_clean = preprocess_for_synthesis(raw_data)
+    df_clean = raw_data
 
-    # Phase 2: Synthetic Data Generation using Jittering
-    print("\nGenerating synthetic data using jittering approach...")
-    num_samples = len(raw_data)
-    synthetic_df = generate_jittered_data(df_clean, num_rows=num_samples, noise_level=0.01)
-
+    # Phase 2: Synthetic Data Generation
+    print("\nGenerate synthetic data: ")
+    # Pick ONE approach to run (comment/uncomment as needed):
+    #synthetic_df = run_random_sample(df_clean, num_samples=8000)
+    #synthetic_df = run_gaussian_copula(df_clean, num_samples=8000)
+    #synthetic_df = run_ctgan(df_clean, num_samples=8000)            # best stats, needs: pip install sdv
+    synthetic_df = run_knn_perturbation(df_clean, num_samples=8000)  # fast, clinical-logic friendly
+    #synthetic_df = run_llm_archetype(df_clean, num_samples=8000)    # creative, needs ANTHROPIC_API_KEY
+    
     # Phase 3: Quality Assurance
+    # Compares the cleaned source data against the generated output
     run_evaluation_report(raw_data, synthetic_df)
 
     # Phase 4: Export
-    os.makedirs(results_dir, exist_ok=True)
-    output_path = results_dir / "submission.csv"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+
+    # Create the unique filename
+    output_filename = f"synthetic_data_{timestamp}.csv"
+    output_path = results_dir / output_filename
+
+    # Save to the specific folder
     synthetic_df.to_csv(output_path, index=False)
 
     print(f"\nExecution successful.")
